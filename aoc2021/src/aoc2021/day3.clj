@@ -18,10 +18,6 @@
 "Part 1"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn add-to-tally
-  [tally s]
-  )
-
 (defn calc-gamma-epsilon
   [bitwise-tally n gamma epsilon]
   (if (= 0 (count bitwise-tally))
@@ -41,3 +37,56 @@
                 (read-diagnostic-report input (replicate (count (first input)) 0) 0)))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Part 2"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn binary-str-to-int
+  ([s] (binary-str-to-int s 0))
+  ([s n] 
+   (if (= 0 (count s))
+     n
+     (binary-str-to-int (subs s 1) (+ (Integer/parseInt (subs s 0 1)) (* 2 n))))))
+
+(defn outer-loop  [report i inner-loop]
+    (if (= 1 (count report))
+      (first report)
+      (inner-loop report i '() '())))
+
+(defn o2-gen-inner-loop
+  [report i group0 group1]
+  (if (= 0 (count report))
+    (if (> (count group0) (count group1))
+      (outer-loop group0 (+ 1 i) o2-gen-inner-loop)
+      (outer-loop group1 (+ 1 i) o2-gen-inner-loop))
+    (let [current (first report)]
+      (if (= \0 (.charAt current i))
+        (o2-gen-inner-loop (rest report) i (cons current group0) group1)
+        (o2-gen-inner-loop (rest report) i group0 (cons current group1))))
+    ))
+
+(defn co2-scrub-inner-loop
+  [report i group0 group1]
+  (if (= 0 (count report))
+    (if (> (count group0) (count group1))
+      (outer-loop group1 (+ 1 i) co2-scrub-inner-loop)
+      (outer-loop group0 (+ 1 i) co2-scrub-inner-loop))
+    (let [current (first report)]
+      (if (= \0 (.charAt current i))
+        (co2-scrub-inner-loop (rest report) i (cons current group0) group1)
+        (co2-scrub-inner-loop (rest report) i group0 (cons current group1))))
+    ))
+
+(defn o2-gen 
+  [report]
+  (binary-str-to-int (outer-loop report 0 o2-gen-inner-loop))
+  )
+
+(defn co2-scrubber 
+  [report]
+  (binary-str-to-int (outer-loop report 0 co2-scrub-inner-loop))
+  )
+
+
+(defn part2 [] (println
+                (* (o2-gen input) (co2-scrubber input))))
